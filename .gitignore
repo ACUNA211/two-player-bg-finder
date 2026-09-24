@@ -1,0 +1,12 @@
+# Secrets
+.env
+*.env
+
+# Downloaded BGG data (not ours to redistribute)
+.scratch/**/data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
