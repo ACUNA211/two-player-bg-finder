@@ -28,13 +28,13 @@ A yes / no / "yes, but…" verdict on whether we can get the BGG data a public t
 - [Two-player score formula and Vote floor](issues/05-two-player-score-and-vote-floor.md): Score = Wilson 95% lower bound on (Best + 0.75·Rec − NotRec) ÷ Votes at 2, range −1..1 (negatives kept and shown). Vote floor 15 (212 of 314 eligible sample games; 92% at rank ~2000, 76% at ~3000, 27% at ~5000). Ties: more Votes at 2 first.
 - [Decide the Seed set size](issues/06-seed-set-size.md): N = 5,000 (~20 min scrape, ~3,300 listed games). Rebuilt weekly as the top 5,000 of the latest ranks dump, falling back to the last dump if none; games falling below 5,000 drop off.
 - [How the weekly run gets the ranks dump](issues/08-ranks-dump-refresh.md): Bearer token is refused on the dump page (tested). Human downloads the dump weekly; the run falls back to the last dump; a dump >30 days old triggers a logged warning + email (email also on run failure; mechanism decided at build). Bar 3 = "yes, but…" (unattended scrape, manual Seed set refresh). Human to ask BGG about token access later.
+- [Feasibility verdict](issues/07-feasibility-verdict.md): **"Yes, but…"**. Bars 2, 4, 5 = yes; bar 3 = yes but manual weekly dump refresh; bar 1 = yes but BGG may revoke the license (mitigated by attribution, links to BGG, no ads; takedown accepted, this is an experiment). A resumable store (SQLite) is not needed for feasibility and is deferred to the build.
 
 ## Not yet specified
 
-- Workarounds for any other bar item that fails, e.g. if rate limits push a full scrape far past 2 hours, or the terms rule out a public site. (The ranks-dump login problem has graduated into "How the weekly run gets the ranks dump".)
-- Whether a resumable working store (e.g. SQLite) matters for feasibility. It's only in scope if the scrape turns out long or fragile enough that restarting from scratch is unacceptable.
+- Nothing. Destination reached.
 
 ## Out of scope
 
 - BGG username / owned-games cross-reference. Dropped for now. If it returns, the decided behaviour is to **filter the list to owned games only** ("which of my games is best at 2?").
-- Building the site: page UI, hosting, the weekly scheduling setup, choosing the scraper's storage format, and whether the page shows the Two-player score. These are build decisions for after the verdict.
+- Building the site: page UI, hosting, the weekly scheduling setup, choosing the scraper's storage format (incl. a resumable SQLite store), and whether the page shows the Two-player score. These are build decisions for after the verdict.
