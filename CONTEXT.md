@@ -25,7 +25,7 @@ The minimum Votes at 2 a game needs before it is ranked: 15.
 A game whose publisher-stated player range includes 2. Only these games are listed.
 
 **Seed set**:
-The fixed list of games (top N by BGG rank) whose data is collected ahead of time.
+The list of games whose data is collected ahead of time: the top 5,000 by BGG rank in the latest ranks dump. It is rebuilt each week, so a game that falls below rank 5,000 drops off.
 
 ## Relationships
 
