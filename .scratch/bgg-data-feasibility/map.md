@@ -25,6 +25,7 @@ A yes / no / "yes, but…" verdict on whether we can get the BGG data a public t
 - [Where to get the Seed set of ranked game IDs](issues/02-seed-set-source.md): BGG's own `bg_ranks` CSV dump is the best source (id, name, year, rank; no min/max players) but its download page requires a logged-in BGG session, so it isn't fetchable by a plain unattended GET — needs a login-session workaround or fallback; stale third-party datasets exist only as a bootstrap.
 - [Set up BGG API access](issues/03-set-up-bgg-api-access.md): App registered (submitted 2026-09-23, working by 09-24); token in Windows user env var `BGG_TOKEN`, `/thing?stats=1` verified. Terms: credit BGG + "Powered by BGG" logo, no data modification, no AI training, strictly non-commercial, ≤20 IDs per `/thing` call and ~5 s between calls (full 31k-game scrape ≈ 2.2 h, just past the bar); BGG may revoke apps that compete with it. Ranks CSV downloaded manually to `data/` (31,366 ranked games); the dump falls under the API license and may be fetchable with the Bearer token (untested, see #08).
 - [Pull a real sample of BGG game data and measure throughput](issues/04-pull-sample-data.md): 360-game sample across rank bands, all HTTP 200 at 20 IDs / 5 s ≈ 244 games/min (8,000 games ≈ 33 min, well under the bar). All needed fields present and sane. Games clearing the 30-vote floor: 100% of ranks 1–500, 96% at ~1000, 64% at ~2000, 35% at ~3000, ~2% at 5000+, so Seed sets past ~3–4k add little.
+- [Two-player score formula and Vote floor](issues/05-two-player-score-and-vote-floor.md): Score = Wilson 95% lower bound on (Best + 0.75·Rec − NotRec) ÷ Votes at 2, range −1..1 (negatives kept and shown). Vote floor 15 (212 of 314 eligible sample games; 92% at rank ~2000, 76% at ~3000, 27% at ~5000). Ties: more Votes at 2 first.
 
 ## Not yet specified
 
@@ -34,4 +35,4 @@ A yes / no / "yes, but…" verdict on whether we can get the BGG data a public t
 ## Out of scope
 
 - BGG username / owned-games cross-reference. Dropped for now. If it returns, the decided behaviour is to **filter the list to owned games only** ("which of my games is best at 2?").
-- Building the site: page UI, hosting, the weekly scheduling setup, choosing the scraper's storage format. These are build decisions for after the verdict.
+- Building the site: page UI, hosting, the weekly scheduling setup, choosing the scraper's storage format, and whether the page shows the Two-player score. These are build decisions for after the verdict.

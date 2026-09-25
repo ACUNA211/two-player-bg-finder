@@ -15,11 +15,11 @@ The total number of Best + Recommended + Not Recommended votes cast for the 2-pl
 The share of Votes at 2 that are Best.
 
 **Two-player score**:
-The number a game is ranked by. It is derived from the Player-count poll at 2 and takes both Best and Recommended votes into account. Its exact formula is not yet decided.
+The number a game is ranked by. It is derived from the Player-count poll at 2 and scores Best as 1, Recommended as 0.75 and Not Recommended as −1, divided by the Votes at 2. A Wilson lower bound (95%) then lowers the score of games with few votes. The score runs from −1 to 1, and a game that is poor at 2 can score below 0.
 _Avoid_: rating, BGG rating (that is a different BGG number)
 
 **Vote floor**:
-The minimum Votes at 2 a game needs before it is ranked. Tentatively 30.
+The minimum Votes at 2 a game needs before it is ranked: 15.
 
 **Two-player eligible**:
 A game whose publisher-stated player range includes 2. Only these games are listed.
