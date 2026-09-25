@@ -27,6 +27,7 @@ A yes / no / "yes, but…" verdict on whether we can get the BGG data a public t
 - [Pull a real sample of BGG game data and measure throughput](issues/04-pull-sample-data.md): 360-game sample across rank bands, all HTTP 200 at 20 IDs / 5 s ≈ 244 games/min (8,000 games ≈ 33 min, well under the bar). All needed fields present and sane. Games clearing the 30-vote floor: 100% of ranks 1–500, 96% at ~1000, 64% at ~2000, 35% at ~3000, ~2% at 5000+, so Seed sets past ~3–4k add little.
 - [Two-player score formula and Vote floor](issues/05-two-player-score-and-vote-floor.md): Score = Wilson 95% lower bound on (Best + 0.75·Rec − NotRec) ÷ Votes at 2, range −1..1 (negatives kept and shown). Vote floor 15 (212 of 314 eligible sample games; 92% at rank ~2000, 76% at ~3000, 27% at ~5000). Ties: more Votes at 2 first.
 - [Decide the Seed set size](issues/06-seed-set-size.md): N = 5,000 (~20 min scrape, ~3,300 listed games). Rebuilt weekly as the top 5,000 of the latest ranks dump, falling back to the last dump if none; games falling below 5,000 drop off.
+- [How the weekly run gets the ranks dump](issues/08-ranks-dump-refresh.md): Bearer token is refused on the dump page (tested). Human downloads the dump weekly; the run falls back to the last dump; a dump >30 days old triggers a logged warning + email (email also on run failure; mechanism decided at build). Bar 3 = "yes, but…" (unattended scrape, manual Seed set refresh). Human to ask BGG about token access later.
 
 ## Not yet specified
 
