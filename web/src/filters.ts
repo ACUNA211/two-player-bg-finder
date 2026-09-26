@@ -42,6 +42,21 @@ export type RangeKey = (typeof RANGE_FIELDS)[number]["key"];
 
 export type Range = { min?: number; max?: number };
 
+// One-click spans for the ranges people reach for most.
+export const PRESETS: Partial<Record<RangeKey, { label: string; range: Range }[]>> = {
+  weight: [
+    { label: "Light", range: { max: 2 } },
+    { label: "Medium", range: { min: 2, max: 3 } },
+    { label: "Heavy", range: { min: 3 } },
+  ],
+  playtime: [
+    { label: "≤ 30 min", range: { max: 30 } },
+    { label: "≤ 1 hr", range: { max: 60 } },
+    { label: "≤ 2 hr", range: { max: 120 } },
+    { label: "2 hr+", range: { min: 120 } },
+  ],
+};
+
 // Must play: extra player counts a game has to support besides 2. "6+" means it plays 6
 // (every listed game has min <= 2, so that's the same as max >= 6).
 export const MUST_PLAY = [1, 3, 4, 5, 6];
@@ -61,6 +76,21 @@ export type Filters = {
 };
 
 export const emptyFilters = (): Filters => ({ name: "", types: [], ranges: { votes2: { min: VOTE_FLOOR } }, tags: {}, mustPlay: [], twoOnly: "any" });
+
+const isSet = (r?: Range) => r?.min !== undefined || r?.max !== undefined;
+
+// How many filters differ from the defaults (the name search aside), for the Filters button.
+export function activeCount(f: Filters): number {
+  const { votes2, ...ranges } = f.ranges;
+  return (
+    (f.types.length ? 1 : 0) +
+    (f.mustPlay.length ? 1 : 0) +
+    (f.twoOnly !== "any" ? 1 : 0) +
+    Object.values(ranges).filter(isSet).length +
+    ((votes2?.min ?? VOTE_FLOOR) > VOTE_FLOOR || votes2?.max !== undefined ? 1 : 0) +
+    Object.values(f.tags).filter((v) => v?.length).length
+  );
+}
 
 function inRange([lo, hi]: Span, { min, max }: Range) {
   if (min !== undefined && (lo === null || lo < min)) return false;

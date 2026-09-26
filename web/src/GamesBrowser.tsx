@@ -1,10 +1,12 @@
 import { useId, useMemo, useState } from "react";
 import { GamesTable } from "./GamesTable";
 import {
+  activeCount,
   applyFilters,
   emptyFilters,
   MUST_PLAY,
   mustPlayLabel,
+  PRESETS,
   RANGE_FIELDS,
   TAG_FIELDS,
   TYPES,
@@ -17,8 +19,8 @@ import {
 } from "./filters";
 import type { Game } from "./types";
 
-// Ranges shown in the always-visible bar; the rest (and Votes at 2 max) live in the panel.
-const BAR_RANGES: RangeKey[] = ["weight", "playtime"];
+// Mechanics get their own dropdown next to Types; the other tag fields sit under "More tags".
+const MORE_TAGS = TAG_FIELDS.filter((t) => t.key !== "mechanics");
 const MAX_OPTIONS = 50;
 const TWO_ONLY: [TwoOnly, string][] = [["any", "Any"], ["only", "Only"], ["hide", "Hide"]];
 
@@ -26,6 +28,7 @@ export function GamesBrowser({ games }: { games: Game[] }) {
   const [filters, setFilters] = useState(emptyFilters);
   const [panelOpen, setPanelOpen] = useState(false);
   const filtered = useMemo(() => applyFilters(games, filters), [games, filters]);
+  const active = activeCount(filters);
 
   const tagOptions = useMemo(() => {
     const out = {} as Record<TagKey, string[]>;
@@ -36,7 +39,6 @@ export function GamesBrowser({ games }: { games: Game[] }) {
   const update = (patch: Partial<Filters>) => setFilters((f) => ({ ...f, ...patch }));
   const setRange = (key: RangeKey, r: Range) => setFilters((f) => ({ ...f, ranges: { ...f.ranges, [key]: r } }));
   const setTag = (key: TagKey, values: string[]) => setFilters((f) => ({ ...f, tags: { ...f.tags, [key]: values } }));
-  const votes = filters.ranges.votes2 ?? {};
 
   return (
     <>
@@ -45,56 +47,8 @@ export function GamesBrowser({ games }: { games: Game[] }) {
           <span>Name</span>
           <input type="search" value={filters.name} onChange={(e) => update({ name: e.target.value })} placeholder="Search…" />
         </label>
-        <fieldset className="types">
-          <legend>Type</legend>
-          {TYPES.map((t) => (
-            <label key={t} className="chip">
-              <input
-                type="checkbox"
-                checked={filters.types.includes(t)}
-                onChange={(e) => update({ types: e.target.checked ? [...filters.types, t] : filters.types.filter((x) => x !== t) })}
-              />
-              {t}
-            </label>
-          ))}
-        </fieldset>
-        <fieldset className="types">
-          <legend>Must play</legend>
-          {MUST_PLAY.map((n) => (
-            <label key={n} className="chip">
-              <input
-                type="checkbox"
-                checked={filters.mustPlay.includes(n)}
-                onChange={(e) => update({ mustPlay: e.target.checked ? [...filters.mustPlay, n] : filters.mustPlay.filter((x) => x !== n) })}
-              />
-              {mustPlayLabel(n)}
-            </label>
-          ))}
-        </fieldset>
-        <fieldset className="types">
-          <legend>2p-only games</legend>
-          {TWO_ONLY.map(([value, label]) => (
-            <label key={value} className="chip">
-              <input type="radio" name="two-only" checked={filters.twoOnly === value} onChange={() => update({ twoOnly: value })} />
-              {label}
-            </label>
-          ))}
-        </fieldset>
-        {BAR_RANGES.map((key) => (
-          <RangeInput key={key} field={key} value={filters.ranges[key]} onChange={(r) => setRange(key, r)} />
-        ))}
-        <label className="field">
-          <span>Min votes</span>
-          <input
-            type="number"
-            min={VOTE_FLOOR}
-            value={votes.min ?? ""}
-            onChange={(e) => setRange("votes2", { ...votes, min: toNum(e.target.value) })}
-            onBlur={() => setRange("votes2", { ...votes, min: Math.max(VOTE_FLOOR, votes.min ?? VOTE_FLOOR) })}
-          />
-        </label>
         <button type="button" aria-expanded={panelOpen} aria-controls="filter-panel" onClick={() => setPanelOpen((o) => !o)}>
-          Filters
+          Filters{active > 0 && ` (${active})`}
         </button>
         <button type="button" onClick={() => setFilters(emptyFilters())}>
           Clear all
@@ -102,23 +56,71 @@ export function GamesBrowser({ games }: { games: Game[] }) {
       </div>
       <p className="count">{filtered.length.toLocaleString()} games</p>
 
-      <aside id="filter-panel" className="filter-panel" hidden={!panelOpen} aria-label="More filters">
+      <aside id="filter-panel" className="filter-panel" hidden={!panelOpen} aria-label="Filters">
         <div className="panel-head">
           <h2>Filters</h2>
           <button type="button" onClick={() => setPanelOpen(false)} aria-label="Close filters">
             ×
           </button>
         </div>
-        {RANGE_FIELDS.filter((r) => !BAR_RANGES.includes(r.key) && r.key !== "votes2").map((r) => (
-          <RangeInput key={r.key} field={r.key} value={filters.ranges[r.key]} onChange={(v) => setRange(r.key, v)} />
-        ))}
-        <label className="field">
-          <span>Max votes</span>
-          <input type="number" min={VOTE_FLOOR} value={votes.max ?? ""} onChange={(e) => setRange("votes2", { ...votes, max: toNum(e.target.value) })} />
-        </label>
-        {TAG_FIELDS.map(({ key, label }) => (
-          <MultiSelect key={key} label={label} options={tagOptions[key]} value={filters.tags[key] ?? []} onChange={(v) => setTag(key, v)} />
-        ))}
+
+        <details className="section" open>
+          <summary>Players</summary>
+          <fieldset className="types">
+            <legend>Must play</legend>
+            {MUST_PLAY.map((n) => (
+              <label key={n} className="chip">
+                <input
+                  type="checkbox"
+                  checked={filters.mustPlay.includes(n)}
+                  onChange={(e) => update({ mustPlay: e.target.checked ? [...filters.mustPlay, n] : filters.mustPlay.filter((x) => x !== n) })}
+                />
+                {mustPlayLabel(n)}
+              </label>
+            ))}
+          </fieldset>
+          <fieldset className="types">
+            <legend>2p-only games</legend>
+            {TWO_ONLY.map(([value, label]) => (
+              <label key={value} className="chip">
+                <input type="radio" name="two-only" checked={filters.twoOnly === value} onChange={() => update({ twoOnly: value })} />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+        </details>
+
+        <details className="section">
+          <summary>Types &amp; Mechanics</summary>
+          <CheckList label="Types" hint="matches any" options={TYPES} value={filters.types} onChange={(types) => update({ types })} />
+          <CheckList
+            label="Mechanics"
+            hint="matches all"
+            options={tagOptions.mechanics}
+            value={filters.tags.mechanics ?? []}
+            onChange={(v) => setTag("mechanics", v)}
+          />
+        </details>
+
+        <details className="section">
+          <summary>Ranges</summary>
+          {RANGE_FIELDS.map((r) => (
+            <RangeInput
+              key={r.key}
+              field={r.key}
+              value={filters.ranges[r.key]}
+              floor={r.key === "votes2" ? VOTE_FLOOR : undefined}
+              onChange={(v) => setRange(r.key, v)}
+            />
+          ))}
+        </details>
+
+        <details className="section">
+          <summary>More tags</summary>
+          {MORE_TAGS.map(({ key, label }) => (
+            <MultiSelect key={key} label={label} options={tagOptions[key]} value={filters.tags[key] ?? []} onChange={(v) => setTag(key, v)} />
+          ))}
+        </details>
       </aside>
 
       <GamesTable games={filtered} />
@@ -128,15 +130,69 @@ export function GamesBrowser({ games }: { games: Game[] }) {
 
 const toNum = (s: string) => (s === "" || Number.isNaN(Number(s)) ? undefined : Number(s));
 
-function RangeInput({ field, value = {}, onChange }: { field: RangeKey; value?: Range; onChange: (r: Range) => void }) {
+// A floor, if given, is the lowest min allowed; the min snaps back up to it on blur.
+function RangeInput({ field, value = {}, floor, onChange }: { field: RangeKey; value?: Range; floor?: number; onChange: (r: Range) => void }) {
   const { label, step } = RANGE_FIELDS.find((r) => r.key === field)!;
+  const presets = PRESETS[field] ?? [];
   return (
     <fieldset className="range">
       <legend>{label}</legend>
-      <input type="number" step={step} aria-label={`${label} min`} placeholder="min" value={value.min ?? ""} onChange={(e) => onChange({ ...value, min: toNum(e.target.value) })} />
+      {presets.length > 0 && (
+        <div className="presets">
+          {presets.map((p) => {
+            const on = value.min === p.range.min && value.max === p.range.max;
+            return (
+              <button key={p.label} type="button" className="chip" aria-pressed={on} onClick={() => onChange(on ? {} : p.range)}>
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <input
+        type="number"
+        step={step}
+        min={floor}
+        aria-label={`${label} min`}
+        placeholder="min"
+        value={value.min ?? ""}
+        onChange={(e) => onChange({ ...value, min: toNum(e.target.value) })}
+        onBlur={floor === undefined ? undefined : () => onChange({ ...value, min: Math.max(floor, value.min ?? floor) })}
+      />
       <span aria-hidden>–</span>
-      <input type="number" step={step} aria-label={`${label} max`} placeholder="max" value={value.max ?? ""} onChange={(e) => onChange({ ...value, max: toNum(e.target.value) })} />
+      <input type="number" step={step} min={floor} aria-label={`${label} max`} placeholder="max" value={value.max ?? ""} onChange={(e) => onChange({ ...value, max: toNum(e.target.value) })} />
     </fieldset>
+  );
+}
+
+// A dropdown listing every option as a checkbox, narrowed by a search box.
+function CheckList({ label, hint, options, value, onChange }: { label: string; hint: string; options: string[]; value: string[]; onChange: (v: string[]) => void }) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const shown = q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
+
+  return (
+    <details className="dropdown">
+      <summary>
+        {label}
+        {value.length > 0 && ` (${value.length})`} <small>{hint}</small>
+      </summary>
+      <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…" aria-label={`Search ${label}`} />
+      <ul className="checklist" aria-label={`${label} options`}>
+        {shown.map((o) => (
+          <li key={o}>
+            <label>
+              <input
+                type="checkbox"
+                checked={value.includes(o)}
+                onChange={(e) => onChange(e.target.checked ? [...value, o] : value.filter((x) => x !== o))}
+              />
+              {o}
+            </label>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 

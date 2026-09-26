@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
-import { applyFilters, emptyFilters, type Filters } from "./filters";
+import { activeCount, applyFilters, emptyFilters, type Filters } from "./filters";
 import { GamesBrowser } from "./GamesBrowser";
 import type { Game } from "./types";
 
@@ -77,7 +77,7 @@ test("2p-only games: any, only, hide", () => {
 
 test("min votes input defaults to 15 and snaps back up on blur", () => {
   render(<GamesBrowser games={[game(1)]} />);
-  const input = screen.getByLabelText("Min votes") as HTMLInputElement;
+  const input = screen.getByLabelText("Votes at 2 min") as HTMLInputElement;
   expect(input.value).toBe("15");
   fireEvent.change(input, { target: { value: "3" } });
   fireEvent.blur(input);
@@ -95,15 +95,35 @@ test("filtering keeps # and resets to page 1", () => {
   expect(screen.getByText("125 games")).toBeTruthy();
 });
 
-test("side panel opens, searchable multi-select filters, clear all resets", () => {
-  const gs = [game(1, { designers: ["Uwe Rosenberg"] }), game(2, { designers: ["Reiner Knizia"] })];
+test("filter panel: sections, dropdowns, presets, clear all", () => {
+  const gs = [
+    game(1, { designers: ["Uwe Rosenberg"], types: ["Strategy"], mechanics: ["Cooperative Game"], weight: 3.5 }),
+    game(2, { designers: ["Reiner Knizia"], types: ["Family"], mechanics: [], weight: 1.5 }),
+  ];
   render(<GamesBrowser games={gs} />);
   const panel = screen.getByRole("complementary", { hidden: true });
   expect(panel.hidden).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   expect(panel.hidden).toBe(false);
 
-  fireEvent.change(within(panel).getAllByRole("searchbox")[2], { target: { value: "uwe" } }); // Designer
+  // Mechanics lists every value; search narrows it. Cooperative lives here.
+  fireEvent.change(within(panel).getByLabelText("Search Mechanics"), { target: { value: "coop" } });
+  fireEvent.click(within(panel).getByLabelText("Cooperative Game"));
+  expect(posColumn()).toEqual(["1"]);
+  expect(screen.getByRole("button", { name: "Filters (1)" })).toBeTruthy();
+  fireEvent.click(within(panel).getByLabelText("Cooperative Game"));
+
+  fireEvent.click(within(within(panel).getByRole("list", { name: "Types options" })).getByLabelText("Family"));
+  expect(posColumn()).toEqual(["2"]);
+  fireEvent.click(within(within(panel).getByRole("list", { name: "Types options" })).getByLabelText("Family"));
+
+  fireEvent.click(within(panel).getByRole("button", { name: "Heavy" }));
+  expect(posColumn()).toEqual(["1"]);
+  expect(within(panel).getByRole("button", { name: "Heavy" }).getAttribute("aria-pressed")).toBe("true");
+  fireEvent.click(within(panel).getByRole("button", { name: "Heavy" }));
+  expect(posColumn()).toEqual(["1", "2"]);
+
+  fireEvent.change(within(panel).getAllByRole("searchbox").at(-4)!, { target: { value: "uwe" } }); // Designer
   fireEvent.click(within(panel).getByRole("button", { name: "Uwe Rosenberg" }));
   expect(posColumn()).toEqual(["1"]);
 
@@ -113,4 +133,10 @@ test("side panel opens, searchable multi-select filters, clear all resets", () =
   fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
   expect(posColumn()).toEqual(["1", "2"]);
   expect((screen.getByLabelText("Any") as HTMLInputElement).checked).toBe(true);
+});
+
+test("active count ignores defaults and the name search", () => {
+  expect(activeCount(filt({ name: "x" }))).toBe(0);
+  expect(activeCount(filt({ ranges: { votes2: { min: 15 }, weight: {} } }))).toBe(0);
+  expect(activeCount(filt({ types: ["Party"], mustPlay: [4], twoOnly: "hide", ranges: { votes2: { min: 30 }, weight: { max: 2 } }, tags: { mechanics: ["x"], designers: [] } }))).toBe(6);
 });

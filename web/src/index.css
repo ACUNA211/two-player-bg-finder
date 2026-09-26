@@ -86,6 +86,18 @@ input, button { font: inherit; font-size: 0.85rem; }
 .options button { all: unset; display: block; width: 100%; box-sizing: border-box; padding: 4px 8px; cursor: pointer; font-size: 0.85rem; }
 .options button:hover, .options button:focus-visible { background: var(--stripe); }
 
+.section { border-top: 1px solid var(--line); padding-top: 8px; }
+.section > summary { cursor: pointer; font-weight: 600; }
+.section[open] { display: flex; flex-direction: column; gap: 12px; }
+.dropdown > summary { cursor: pointer; font-size: 0.85rem; }
+.dropdown small { color: var(--muted); }
+.dropdown input[type="search"] { width: 100%; box-sizing: border-box; margin: 4px 0; }
+.checklist { list-style: none; margin: 0; padding: 0; max-height: 14rem; overflow-y: auto; border: 1px solid var(--line); }
+.checklist label { display: flex; gap: 6px; align-items: center; padding: 2px 8px; font-size: 0.85rem; cursor: pointer; }
+.checklist label:hover { background: var(--stripe); }
+.presets { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; }
+.presets .chip[aria-pressed="true"] { border-color: var(--link); color: var(--link); }
+
 .site-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
 .site-footer p { margin: 4px 0; }
 .bgg-logo { display: inline-block; margin-bottom: 8px; }
