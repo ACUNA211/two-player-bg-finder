@@ -10,3 +10,6 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Weekly ranks dump (spec: never committed)
+/data/
