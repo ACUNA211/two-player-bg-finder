@@ -3,6 +3,8 @@ import { GamesTable } from "./GamesTable";
 import {
   applyFilters,
   emptyFilters,
+  MUST_PLAY,
+  mustPlayLabel,
   RANGE_FIELDS,
   TAG_FIELDS,
   TYPES,
@@ -11,12 +13,14 @@ import {
   type Range,
   type RangeKey,
   type TagKey,
+  type TwoOnly,
 } from "./filters";
 import type { Game } from "./types";
 
 // Ranges shown in the always-visible bar; the rest (and Votes at 2 max) live in the panel.
 const BAR_RANGES: RangeKey[] = ["weight", "playtime"];
 const MAX_OPTIONS = 50;
+const TWO_ONLY: [TwoOnly, string][] = [["any", "Any"], ["only", "Only"], ["hide", "Hide"]];
 
 export function GamesBrowser({ games }: { games: Game[] }) {
   const [filters, setFilters] = useState(emptyFilters);
@@ -54,6 +58,28 @@ export function GamesBrowser({ games }: { games: Game[] }) {
             </label>
           ))}
         </fieldset>
+        <fieldset className="types">
+          <legend>Must play</legend>
+          {MUST_PLAY.map((n) => (
+            <label key={n} className="chip">
+              <input
+                type="checkbox"
+                checked={filters.mustPlay.includes(n)}
+                onChange={(e) => update({ mustPlay: e.target.checked ? [...filters.mustPlay, n] : filters.mustPlay.filter((x) => x !== n) })}
+              />
+              {mustPlayLabel(n)}
+            </label>
+          ))}
+        </fieldset>
+        <fieldset className="types">
+          <legend>2p-only games</legend>
+          {TWO_ONLY.map(([value, label]) => (
+            <label key={value} className="chip">
+              <input type="radio" name="two-only" checked={filters.twoOnly === value} onChange={() => update({ twoOnly: value })} />
+              {label}
+            </label>
+          ))}
+        </fieldset>
         {BAR_RANGES.map((key) => (
           <RangeInput key={key} field={key} value={filters.ranges[key]} onChange={(r) => setRange(key, r)} />
         ))}
@@ -83,10 +109,6 @@ export function GamesBrowser({ games }: { games: Game[] }) {
             ×
           </button>
         </div>
-        <label className="chip">
-          <input type="checkbox" checked={filters.twoOnly} onChange={(e) => update({ twoOnly: e.target.checked })} />
-          2-player only
-        </label>
         {RANGE_FIELDS.filter((r) => !BAR_RANGES.includes(r.key) && r.key !== "votes2").map((r) => (
           <RangeInput key={r.key} field={r.key} value={filters.ranges[r.key]} onChange={(v) => setRange(r.key, v)} />
         ))}

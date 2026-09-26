@@ -36,22 +36,31 @@ export const RANGE_FIELDS = [
   },
   { key: "bgg_rank", label: "BGG rank", step: 1, span: (g: Game) => point(g.bgg_rank) },
   { key: "bgg_rating", label: "BGG rating", step: 0.1, span: (g: Game) => point(g.bgg_rating) },
-  { key: "players", label: "Players", step: 1, span: (g: Game): Span => [g.minplayers, g.maxplayers] },
   { key: "minage", label: "Minimum age", step: 1, span: (g: Game) => point(g.minage) },
 ] as const;
 export type RangeKey = (typeof RANGE_FIELDS)[number]["key"];
 
 export type Range = { min?: number; max?: number };
 
+// Must play: extra player counts a game has to support besides 2. "6+" means it plays 6
+// (every listed game has min <= 2, so that's the same as max >= 6).
+export const MUST_PLAY = [1, 3, 4, 5, 6];
+export const mustPlayLabel = (n: number) => (n === 6 ? "6+" : `${n}`);
+const plays = (g: Game, n: number) => g.minplayers <= n && n <= g.maxplayers;
+
+// 2p-only games (max 2 players): show them all, only them, or hide them.
+export type TwoOnly = "any" | "only" | "hide";
+
 export type Filters = {
   name: string;
   types: string[];
   ranges: Partial<Record<RangeKey, Range>>;
   tags: Partial<Record<TagKey, string[]>>;
-  twoOnly: boolean;
+  mustPlay: number[];
+  twoOnly: TwoOnly;
 };
 
-export const emptyFilters = (): Filters => ({ name: "", types: [], ranges: { votes2: { min: VOTE_FLOOR } }, tags: {}, twoOnly: false });
+export const emptyFilters = (): Filters => ({ name: "", types: [], ranges: { votes2: { min: VOTE_FLOOR } }, tags: {}, mustPlay: [], twoOnly: "any" });
 
 function inRange([lo, hi]: Span, { min, max }: Range) {
   if (min !== undefined && (lo === null || lo < min)) return false;
@@ -70,7 +79,8 @@ export function applyFilters(games: Game[], f: Filters): Game[] {
     (g) =>
       (!name || g.name.toLowerCase().includes(name)) &&
       (!f.types.length || f.types.some((t) => g.types.includes(t))) &&
-      (!f.twoOnly || g.maxplayers <= 2) &&
+      f.mustPlay.every((n) => plays(g, n)) &&
+      (f.twoOnly === "any" || (f.twoOnly === "only") === g.maxplayers <= 2) &&
       activeRanges.every((r) => inRange(r.span(g), ranges[r.key]!)) &&
       activeTags.every((t) => f.tags[t.key]!.every((v) => g[t.key].includes(v))),
   );

@@ -42,11 +42,24 @@ test("ranges are inclusive, and nulls fail a set bound", () => {
   expect(pos(applyFilters(gs, filt({ ranges: { weight: {} } })))).toEqual([1, 2, 3, 4]);
 });
 
-test("playtime and players ranges contain the game's whole span", () => {
+test("playtime range contains the game's whole span", () => {
   const gs = [game(1, { minplaytime: 20, maxplaytime: 40 }), game(2, { minplaytime: 20, maxplaytime: 90 })];
   expect(pos(applyFilters(gs, filt({ ranges: { playtime: { max: 60 } } })))).toEqual([1]);
-  const ps = [game(1, { minplayers: 2, maxplayers: 2 }), game(2, { minplayers: 1, maxplayers: 5 })];
-  expect(pos(applyFilters(ps, filt({ ranges: { players: { min: 2 } } })))).toEqual([1]);
+});
+
+const players = [
+  game(1, { minplayers: 2, maxplayers: 2 }),
+  game(2, { minplayers: 1, maxplayers: 4 }),
+  game(3, { minplayers: 2, maxplayers: 6 }),
+  game(4, { minplayers: 2, maxplayers: 10 }),
+];
+
+test("must play: blank filters nothing, checked counts are all required", () => {
+  expect(pos(applyFilters(players, filt({ mustPlay: [] })))).toEqual([1, 2, 3, 4]);
+  expect(pos(applyFilters(players, filt({ mustPlay: [1] })))).toEqual([2]);
+  expect(pos(applyFilters(players, filt({ mustPlay: [4] })))).toEqual([2, 3, 4]);
+  expect(pos(applyFilters(players, filt({ mustPlay: [1, 4] })))).toEqual([2]);
+  expect(pos(applyFilters(players, filt({ mustPlay: [6] })))).toEqual([3, 4]); // 6+
 });
 
 test("minimum votes can't go below 15", () => {
@@ -56,9 +69,10 @@ test("minimum votes can't go below 15", () => {
   expect(pos(applyFilters(gs, filt({ ranges: { votes2: { min: 20 } } })))).toEqual([3]);
 });
 
-test("2-player only hides games that go beyond 2", () => {
-  const gs = [game(1, { minplayers: 1, maxplayers: 2 }), game(2, { minplayers: 2, maxplayers: 4 })];
-  expect(pos(applyFilters(gs, filt({ twoOnly: true })))).toEqual([1]);
+test("2p-only games: any, only, hide", () => {
+  expect(pos(applyFilters(players, filt({ twoOnly: "any" })))).toEqual([1, 2, 3, 4]);
+  expect(pos(applyFilters(players, filt({ twoOnly: "only" })))).toEqual([1]);
+  expect(pos(applyFilters(players, filt({ twoOnly: "hide" })))).toEqual([2, 3, 4]);
 });
 
 test("min votes input defaults to 15 and snaps back up on blur", () => {
@@ -93,10 +107,10 @@ test("side panel opens, searchable multi-select filters, clear all resets", () =
   fireEvent.click(within(panel).getByRole("button", { name: "Uwe Rosenberg" }));
   expect(posColumn()).toEqual(["1"]);
 
-  fireEvent.click(within(panel).getByLabelText("2-player only"));
+  fireEvent.click(screen.getByLabelText("Only"));
   expect(screen.getByText("0 games")).toBeTruthy();
 
   fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
   expect(posColumn()).toEqual(["1", "2"]);
-  expect((within(panel).getByLabelText("2-player only") as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByLabelText("Any") as HTMLInputElement).checked).toBe(true);
 });
