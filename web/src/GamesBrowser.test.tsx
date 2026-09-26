@@ -106,16 +106,22 @@ test("filter panel: sections, dropdowns, presets, clear all", () => {
   fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   expect(panel.hidden).toBe(false);
 
-  // Mechanics lists every value; search narrows it. Cooperative lives here.
-  fireEvent.change(within(panel).getByLabelText("Search Mechanics"), { target: { value: "coop" } });
-  fireEvent.click(within(panel).getByLabelText("Cooperative Game"));
+  // Popular chips and the full lists share state. Cooperative lives in Mechanics.
+  const mechChips = within(panel).getByRole("group", { name: /^Mechanics/ });
+  const moreMechs = within(panel).getByRole("list", { name: "More mechanics options" });
+  fireEvent.click(within(mechChips).getByLabelText("Cooperative Game"));
   expect(posColumn()).toEqual(["1"]);
   expect(screen.getByRole("button", { name: "Filters (1)" })).toBeTruthy();
-  fireEvent.click(within(panel).getByLabelText("Cooperative Game"));
+  expect((within(moreMechs).getByLabelText("Cooperative Game") as HTMLInputElement).checked).toBe(true);
+  fireEvent.change(within(panel).getByLabelText("Search More mechanics"), { target: { value: "zzz" } });
+  expect(within(moreMechs).queryAllByRole("checkbox")).toEqual([]);
+  fireEvent.click(within(mechChips).getByLabelText("Cooperative Game"));
 
-  fireEvent.click(within(within(panel).getByRole("list", { name: "Types options" })).getByLabelText("Family"));
+  const typeChips = within(panel).getByRole("group", { name: /^Types/ });
+  fireEvent.click(within(typeChips).getByLabelText("Family"));
   expect(posColumn()).toEqual(["2"]);
-  fireEvent.click(within(within(panel).getByRole("list", { name: "Types options" })).getByLabelText("Family"));
+  fireEvent.click(within(within(panel).getByRole("list", { name: "More types options" })).getByLabelText("Family"));
+  expect(posColumn()).toEqual(["1", "2"]);
 
   fireEvent.click(within(panel).getByRole("button", { name: "Heavy" }));
   expect(posColumn()).toEqual(["1"]);
@@ -130,7 +136,7 @@ test("filter panel: sections, dropdowns, presets, clear all", () => {
   fireEvent.click(screen.getByLabelText("Only"));
   expect(screen.getByText("0 games")).toBeTruthy();
 
-  fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
+  fireEvent.click(within(panel).getByRole("button", { name: "Clear all" }));
   expect(posColumn()).toEqual(["1", "2"]);
   expect((screen.getByLabelText("Any") as HTMLInputElement).checked).toBe(true);
 });

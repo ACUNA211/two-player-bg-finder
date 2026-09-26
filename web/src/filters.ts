@@ -5,6 +5,11 @@ export const VOTE_FLOOR = 15;
 
 export const TYPES = ["Strategy", "Family", "Thematic", "Wargames", "Abstract", "Party", "Customizable", "Children's"];
 
+// Shown as chips at the top of the panel: the most common Types and Mechanics among the
+// top 500 listed games (Solo left out, since it says nothing about playing at 2).
+export const POPULAR_TYPES = ["Strategy", "Family", "Thematic", "Wargames", "Abstract"];
+export const POPULAR_MECHANICS = ["Cooperative Game", "Hand Management", "Variable Player Powers", "Dice Rolling", "Open Drafting", "Set Collection"];
+
 export const TAG_FIELDS = [
   { key: "categories", label: "Category" },
   { key: "mechanics", label: "Mechanic" },

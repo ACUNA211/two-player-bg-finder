@@ -6,6 +6,8 @@ import {
   emptyFilters,
   MUST_PLAY,
   mustPlayLabel,
+  POPULAR_MECHANICS,
+  POPULAR_TYPES,
   PRESETS,
   RANGE_FIELDS,
   TAG_FIELDS,
@@ -59,6 +61,9 @@ export function GamesBrowser({ games }: { games: Game[] }) {
       <aside id="filter-panel" className="filter-panel" hidden={!panelOpen} aria-label="Filters">
         <div className="panel-head">
           <h2>Filters</h2>
+          <button type="button" onClick={() => setFilters(emptyFilters())}>
+            Clear all
+          </button>
           <button type="button" onClick={() => setPanelOpen(false)} aria-label="Close filters">
             ×
           </button>
@@ -90,16 +95,18 @@ export function GamesBrowser({ games }: { games: Game[] }) {
           </fieldset>
         </details>
 
-        <details className="section">
+        <details className="section" open>
           <summary>Types &amp; Mechanics</summary>
-          <CheckList label="Types" hint="matches any" options={TYPES} value={filters.types} onChange={(types) => update({ types })} />
-          <CheckList
-            label="Mechanics"
+          <Chips legend="Types" hint="matches any" options={POPULAR_TYPES} value={filters.types} onChange={(types) => update({ types })} />
+          <CheckList label="More types" options={TYPES} value={filters.types} onChange={(types) => update({ types })} />
+          <Chips
+            legend="Mechanics"
             hint="matches all"
-            options={tagOptions.mechanics}
+            options={POPULAR_MECHANICS}
             value={filters.tags.mechanics ?? []}
             onChange={(v) => setTag("mechanics", v)}
           />
+          <CheckList label="More mechanics" options={tagOptions.mechanics} value={filters.tags.mechanics ?? []} onChange={(v) => setTag("mechanics", v)} />
         </details>
 
         <details className="section">
@@ -165,8 +172,25 @@ function RangeInput({ field, value = {}, floor, onChange }: { field: RangeKey; v
   );
 }
 
+// Checkbox chips for a short list of common values.
+function Chips({ legend, hint, options, value, onChange }: { legend: string; hint: string; options: string[]; value: string[]; onChange: (v: string[]) => void }) {
+  return (
+    <fieldset className="types">
+      <legend>
+        {legend} <small>{hint}</small>
+      </legend>
+      {options.map((o) => (
+        <label key={o} className="chip">
+          <input type="checkbox" checked={value.includes(o)} onChange={(e) => onChange(e.target.checked ? [...value, o] : value.filter((x) => x !== o))} />
+          {o}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
 // A dropdown listing every option as a checkbox, narrowed by a search box.
-function CheckList({ label, hint, options, value, onChange }: { label: string; hint: string; options: string[]; value: string[]; onChange: (v: string[]) => void }) {
+function CheckList({ label, options, value, onChange }: { label: string; options: string[]; value: string[]; onChange: (v: string[]) => void }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const shown = q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
@@ -175,7 +199,7 @@ function CheckList({ label, hint, options, value, onChange }: { label: string; h
     <details className="dropdown">
       <summary>
         {label}
-        {value.length > 0 && ` (${value.length})`} <small>{hint}</small>
+        {value.length > 0 && ` (${value.length})`}
       </summary>
       <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…" aria-label={`Search ${label}`} />
       <ul className="checklist" aria-label={`${label} options`}>

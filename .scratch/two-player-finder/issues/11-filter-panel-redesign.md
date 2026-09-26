@@ -18,3 +18,7 @@ Blocked by: 10
 - Types and Mechanics are nested dropdowns. Each lists every value as a checkbox and has a search box. Types match any selected value, Mechanics match all. Cooperative is the "Cooperative Game" mechanic, with no separate chip.
 - Presets (`PRESETS`): Weight Light ≤2 · Medium 2–3 · Heavy ≥3. Playtime ≤30 min · ≤1 hr · ≤2 hr · 2 hr+. Clicking a preset again clears it.
 - Tests: 23 passing, and the build is clean.
+
+## Comments
+
+- Follow-up: the Types & Mechanics section now opens by default. At its top are chips for the most common values among the top 500 games by score. Types: Strategy, Family, Thematic, Wargames and Abstract. Mechanics: Cooperative Game, Hand Management, Variable Player Powers, Dice Rolling, Open Drafting and Set Collection; Solo was left out. The full lists are renamed **More types** and **More mechanics** and start closed. The panel header has a Clear all button.
