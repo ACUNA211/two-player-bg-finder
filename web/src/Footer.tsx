@@ -8,7 +8,7 @@ export function Footer({ dumpDate, scrapeDate }: { dumpDate: string; scrapeDate:
       </a>
       <p>
         Game data from <a href="https://boardgamegeek.com" target="_blank" rel="noreferrer">BoardGameGeek</a>. BGG rank
-        and rating are shown unaltered; the Two-player score is our own analysis of BGG's player-count poll.
+        and rating are shown unaltered; the Two-player score is our own blend of BGG's player-count poll and Geek rating.
       </p>
       <p>
         Ranks as of {dumpDate}; poll data fetched {scrapeDate}.

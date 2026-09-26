@@ -22,7 +22,7 @@ const point = (v: number | null): Span => [v, v];
 
 export const RANGE_FIELDS = [
   { key: "year", label: "Year", step: 1, span: (g: Game) => point(g.year) },
-  { key: "score", label: "Two-player score", step: 0.01, span: (g: Game) => point(g.score) },
+  { key: "score", label: "Two-player score", step: 0.1, span: (g: Game) => point(g.score) },
   { key: "votes2", label: "Votes at 2", step: 1, span: (g: Game) => point(g.votes2) },
   { key: "best_pct", label: "Best %", step: 1, span: (g: Game) => point(g.best_pct) },
   { key: "rec_pct", label: "Rec %", step: 1, span: (g: Game) => point(g.rec_pct) },

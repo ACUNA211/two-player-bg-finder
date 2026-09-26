@@ -69,7 +69,7 @@ const columns = col.columns([
   }),
   col.accessor("bgg_rank", { header: "BGG rank", ...numeric, sortDescFirst: false }),
   col.accessor("bgg_rating", { header: "BGG rating", ...numeric, cell: (c) => fixed(3)(c.getValue()) }),
-  col.accessor("score", { header: "Two-player score", ...numeric, cell: (c) => fixed(3)(c.getValue()) }),
+  col.accessor("score", { header: "Two-player score", ...numeric, cell: (c) => fixed(1)(c.getValue()) }),
 ]);
 
 // Columns kept on phone widths; the rest get the "wide" class and are hidden by CSS.

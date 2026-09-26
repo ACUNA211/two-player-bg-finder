@@ -6,9 +6,9 @@ import rank
 import refresh
 
 
-def game(id, best, rec, notrec, minp=2, maxp=2):
+def game(id, best, rec, notrec, minp=2, maxp=2, rating=7.0):
     return {"id": id, "best2": best, "rec2": rec, "notrec2": notrec, "votes2": best + rec + notrec,
-            "minplayers": minp, "maxplayers": maxp}
+            "minplayers": minp, "maxplayers": maxp, "bgg_rating": rating}
 
 
 # Poll counts at 2 from the feasibility sample (issue 05)
@@ -48,6 +48,29 @@ class TwoPlayerScore(unittest.TestCase):
             ranked = rank.rank_games(tie, min_listed=0)
         self.assertEqual([g["id"] for g in ranked], ["many", "few"])
         self.assertEqual([g["pos"] for g in ranked], [1, 2])
+
+
+class Blend(unittest.TestCase):
+    def test_percentiles(self):
+        self.assertEqual(rank.percentiles([3, 1, 2]), [1.0, 0.0, 0.5])
+        self.assertEqual(rank.percentiles([1, 2, 2, 3]), [0.0, 0.5, 0.5, 1.0])
+        self.assertEqual(rank.percentiles([5]), [1.0])
+
+    def test_geek_rating_lifts_a_slightly_weaker_poll(self):
+        # Poll counts and Geek ratings from the 2026-09-25 refresh
+        duel = game("7wd", 1493, 32, 6, rating=7.949)
+        ts = game("ts", 887, 48, 6, rating=8.036)
+        rated_between = game("mid", 100, 100, 50, rating=8.0)  # weak poll, Geek rating between them
+        filler = [game(i, 30 + i, 10, 5, rating=6 + i / 10) for i in range(8)] + [rated_between]
+        ranked = [g["id"] for g in rank.rank_games([duel, ts, *filler], min_listed=0)]
+        self.assertLess(ranked.index("ts"), ranked.index("7wd"))
+
+    def test_score_is_0_to_100(self):
+        games = rank.rank_games(KNOWN, min_listed=0)
+        self.assertEqual(games[0]["poll_pct"], 100.0)
+        for g in games:
+            self.assertTrue(0 <= g["score"] <= 100)
+            self.assertAlmostEqual(g["score"], (g["poll_pct"] + g["geek_pct"]) / 2, delta=0.1)
 
 
 class Listing(unittest.TestCase):

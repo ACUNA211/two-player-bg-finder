@@ -22,7 +22,10 @@ type GamesFile = {
 
 type Game = {
   pos: number;          // "#": overall position by score, 1 = best at two
-  score: number;        // Two-player score, −1..1, 4 decimals
+  score: number;        // Two-player score, 0..100, 1 decimal: mean of poll_pct and geek_pct
+  poll_score: number;   // Poll score, −1..1, 4 decimals (hidden; tiebreak)
+  poll_pct: number;     // percentile of poll_score among listed games, 0..100
+  geek_pct: number;     // percentile of bgg_rating among listed games, 0..100
   id: number;           // BGG id → https://boardgamegeek.com/boardgame/<id>
   name: string;
   year: number | null;

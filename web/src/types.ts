@@ -8,6 +8,9 @@ export type GamesFile = {
 export type Game = {
   pos: number;
   score: number;
+  poll_score: number;
+  poll_pct: number;
+  geek_pct: number;
   id: number;
   name: string;
   year: number | null;
