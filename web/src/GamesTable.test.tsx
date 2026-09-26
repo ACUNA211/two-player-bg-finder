@@ -7,7 +7,7 @@ afterEach(cleanup);
 
 function game(pos: number, over: Partial<Game> = {}): Game {
   return {
-    pos, score: 1 - pos / 1000, id: 1000 + pos, name: `Game ${pos}`, year: 2000 + (pos % 20),
+    pos, score: 100 - pos / 10, poll_score: 0.5, poll_pct: 60, geek_pct: 70, id: 1000 + pos, name: `Game ${pos}`, year: 2000 + (pos % 20),
     thumbnail: `https://cf.geekdo-images.com/${pos}.jpg`, votes2: 100, best2: 50, rec2: 40, notrec2: 10,
     best_pct: 50, rec_pct: 40, notrec_pct: 10, weight: 2.5, minplaytime: 30, maxplaytime: 60,
     minplayers: 1, maxplayers: 4, minage: 10, bgg_rank: pos * 3, bgg_rating: 7, types: [],
@@ -18,14 +18,13 @@ function game(pos: number, over: Partial<Game> = {}): Game {
 
 const games = Array.from({ length: 250 }, (_, i) => game(i + 1)).reverse(); // input order must not matter
 const posColumn = () => screen.getAllByRole("row").slice(1).map((r) => within(r).getAllByRole("cell")[0].textContent);
-const header = (name: string) => screen.getByRole("button", { name: new RegExp(`^${name}`) });
+const header = (name: string) => screen.getByRole("button", { name: new RegExp(`^${name}\\s*[▲▼]?$`) });
 
 test("columns in spec order", () => {
   render(<GamesTable games={games} />);
-  const heads = screen.getAllByRole("columnheader").map((h) => h.textContent!.replace(/[▲▼]/g, "").trim());
-  expect(heads).toEqual([
-    "#", "", "Name", "Year", "Votes at 2", "Best %", "Rec %", "Not-rec %",
-    "Weight", "Playtime", "BGG rank", "BGG rating", "Two-player score",
+  const heads = screen.getAllByRole("columnheader").map((h) => h.querySelector("button")?.textContent ?? h.textContent);
+  expect(heads.map((h) => h!.replace(/[▲▼]/g, "").trim())).toEqual([
+    "#", "", "Name", "Year", "Players", "Poll at 2", "BGG rank", "BGG rating", "Two-player score",
   ]);
 });
 
@@ -72,11 +71,11 @@ test("name links to BGG and thumbnail is lazy", () => {
 });
 
 test("null values sort last", () => {
-  const withNull = [game(1, { weight: null }), game(2, { weight: 1 }), game(3, { weight: 3 })];
+  const withNull = [game(1, { year: null }), game(2, { year: 1990 }), game(3, { year: 2010 })];
   render(<GamesTable games={withNull} />);
-  fireEvent.click(header("Weight"));
+  fireEvent.click(header("Year"));
   expect(posColumn()).toEqual(["3", "2", "1"]);
-  fireEvent.click(header("Weight"));
+  fireEvent.click(header("Year"));
   expect(posColumn()).toEqual(["2", "3", "1"]);
 });
 
@@ -84,4 +83,20 @@ test("only #, thumbnail, name and score are phone columns", () => {
   render(<GamesTable games={games} />);
   const kept = screen.getAllByRole("columnheader").filter((h) => !h.classList.contains("wide"));
   expect(kept.map((h) => h.className)).toEqual(["col-pos", "col-thumbnail", "col-name", "col-score"]);
+});
+
+test("2p-only games carry a pill; others show their range", () => {
+  render(<GamesTable games={[game(1, { minplayers: 2, maxplayers: 2 }), game(2)]} />);
+  const players = screen.getAllByRole("row").slice(1).map((r) => within(r).getAllByRole("cell")[4].textContent);
+  expect(players).toEqual(["2 2p only", "1–4"]);
+});
+
+test("tapping a score shows its breakdown; header ⓘ explains the formula", () => {
+  render(<GamesTable games={[game(1)]} />);
+  const btn = screen.getByRole("button", { name: /^Two-player score 99\.9/ });
+  expect(btn.getAttribute("aria-expanded")).toBe("false");
+  fireEvent.click(btn);
+  expect(btn.getAttribute("aria-expanded")).toBe("true");
+  expect(screen.getByText("Poll at 2 beats 60.0% of games · Geek rating beats 70.0%")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "How the Two-player score is calculated" })).toBeTruthy();
 });

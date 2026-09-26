@@ -8,7 +8,7 @@ afterEach(cleanup);
 
 function game(pos: number, over: Partial<Game> = {}): Game {
   return {
-    pos, score: 1 - pos / 1000, id: 1000 + pos, name: `Game ${pos}`, year: 2000 + (pos % 20),
+    pos, score: 100 - pos / 10, poll_score: 0.5, poll_pct: 60, geek_pct: 70, id: 1000 + pos, name: `Game ${pos}`, year: 2000 + (pos % 20),
     thumbnail: null, votes2: 100, best2: 50, rec2: 40, notrec2: 10,
     best_pct: 50, rec_pct: 40, notrec_pct: 10, weight: 2.5, minplaytime: 30, maxplaytime: 60,
     minplayers: 1, maxplayers: 4, minage: 10, bgg_rank: pos * 3, bgg_rating: 7, types: [],
